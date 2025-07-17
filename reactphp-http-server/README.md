@@ -20,14 +20,7 @@ composer install
 
 ### Starting the server
 
-You can start the server in several ways:
-
-#### Option 1: Using the start script
-```bash
-./start.php
-```
-
-#### Option 2: Running the server directly
+Start the server by running:
 ```bash
 php server.php
 ```
@@ -51,7 +44,6 @@ curl http://127.0.0.1:8080/ping
 ## Files
 
 - `server.php` - Main ReactPHP server implementation
-- `start.php` - Helper script to start the server
 - `composer.json` - PHP project configuration with ReactPHP dependencies
 
 ## Implementation Notes
