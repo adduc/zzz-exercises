@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS Reader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 1rem;
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        .feed-list {
+            list-style: none;
+        }
+
+        .feed-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .feed-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .feed-item.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .feed-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .unread-count {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 12px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .feed-item.active .unread-count {
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            margin-top: 80px;
+            padding: 2rem;
+            background-color: #f5f5f5;
+        }
+
+        .content-header {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .content-header h2 {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header .meta {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        /* Article List */
+        .article-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .article {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .article:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .article-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .article-meta {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .article-source {
+            font-weight: 500;
+            color: #3498db;
+        }
+
+        .article-date {
+            position: relative;
+        }
+
+        .article-date::before {
+            content: "•";
+            margin-right: 0.5rem;
+        }
+
+        .article-summary {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .read-more {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .read-more:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .article-status {
+            font-size: 0.8rem;
+            color: #27ae60;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #27ae60;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                margin-top: 80px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-top: 0;
+                padding: 1rem;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+
+            .article-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .article-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RSS Reader</h1>
+        <div class="subtitle">Stay up to date with your favorite feeds</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h2>My Feeds</h2>
+            <ul class="feed-list">
+                <li class="feed-item active">
+                    <span class="feed-name">TechCrunch</span>
+                    <span class="unread-count">12</span>
+                </li>
+                <li class="feed-item">
+                    <span class="feed-name">Hacker News</span>
+                    <span class="unread-count">8</span>
+                </li>
+                <li class="feed-item">
+                    <span class="feed-name">The Verge</span>
+                    <span class="unread-count">5</span>
+                </li>
+                <li class="feed-item">
+                    <span class="feed-name">Ars Technica</span>
+                    <span class="unread-count">3</span>
+                </li>
+                <li class="feed-item">
+                    <span class="feed-name">Wired</span>
+                    <span class="unread-count">7</span>
+                </li>
+                <li class="feed-item">
+                    <span class="feed-name">MIT Technology Review</span>
+                    <span class="unread-count">2</span>
+                </li>
+                <li class="feed-item">
+                    <span class="feed-name">GitHub Blog</span>
+                    <span class="unread-count">4</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div class="content-header">
+                <h2>TechCrunch</h2>
+                <div class="meta">12 unread articles • Last updated 2 hours ago</div>
+            </div>
+
+            <div class="article-list">
+                <article class="article">
+                    <div class="article-header">
+                        <div>
+                            <h3 class="article-title">AI startup raises $50M Series A to revolutionize content creation</h3>
+                            <div class="article-meta">
+                                <span class="article-source">TechCrunch</span>
+                                <span class="article-date">2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="article-summary">
+                        A promising AI startup has secured significant funding to develop next-generation content creation tools. The company's innovative approach to natural language processing has attracted attention from major investors, positioning it as a key player in the rapidly evolving AI landscape.
+                    </p>
+                    <div class="article-actions">
+                        <a href="#" class="read-more">Read More</a>
+                        <div class="article-status">
+                            <span class="status-dot"></span>
+                            <span>Unread</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="article">
+                    <div class="article-header">
+                        <div>
+                            <h3 class="article-title">Major tech company announces breakthrough in quantum computing</h3>
+                            <div class="article-meta">
+                                <span class="article-source">TechCrunch</span>
+                                <span class="article-date">4 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="article-summary">
+                        Researchers have achieved a significant milestone in quantum computing technology, demonstrating unprecedented computational power that could transform industries ranging from cryptography to drug discovery. The breakthrough represents years of research and development.
+                    </p>
+                    <div class="article-actions">
+                        <a href="#" class="read-more">Read More</a>
+                        <div class="article-status">
+                            <span class="status-dot"></span>
+                            <span>Unread</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="article">
+                    <div class="article-header">
+                        <div>
+                            <h3 class="article-title">New programming language gains traction among developers</h3>
+                            <div class="article-meta">
+                                <span class="article-source">TechCrunch</span>
+                                <span class="article-date">6 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="article-summary">
+                        A recently released programming language is quickly gaining popularity in the developer community due to its unique approach to memory management and concurrency. Early adopters report significant productivity improvements and cleaner code architecture.
+                    </p>
+                    <div class="article-actions">
+                        <a href="#" class="read-more">Read More</a>
+                        <div class="article-status">
+                            <span class="status-dot"></span>
+                            <span>Unread</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="article">
+                    <div class="article-header">
+                        <div>
+                            <h3 class="article-title">Cybersecurity threats evolve as remote work becomes permanent</h3>
+                            <div class="article-meta">
+                                <span class="article-source">TechCrunch</span>
+                                <span class="article-date">8 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="article-summary">
+                        As organizations embrace permanent remote work policies, cybersecurity professionals are adapting their strategies to address new vulnerabilities and attack vectors. The shift requires comprehensive security frameworks that protect distributed workforces.
+                    </p>
+                    <div class="article-actions">
+                        <a href="#" class="read-more">Read More</a>
+                        <div class="article-status">
+                            <span class="status-dot"></span>
+                            <span>Unread</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="article">
+                    <div class="article-header">
+                        <div>
+                            <h3 class="article-title">Electric vehicle adoption accelerates in major markets</h3>
+                            <div class="article-meta">
+                                <span class="article-source">TechCrunch</span>
+                                <span class="article-date">12 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="article-summary">
+                        Recent data shows electric vehicle sales reaching record highs across key markets, driven by improved battery technology, expanded charging infrastructure, and supportive government policies. The automotive industry continues its transformation toward sustainable mobility.
+                    </p>
+                    <div class="article-actions">
+                        <a href="#" class="read-more">Read More</a>
+                        <div class="article-status">
+                            <span class="status-dot"></span>
+                            <span>Unread</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
