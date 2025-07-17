@@ -1,6 +1,6 @@
 # ReactPHP HTTP Server
 
-A simple ReactPHP-style HTTP server implementation that serves specific endpoints.
+A ReactPHP HTTP server implementation that serves specific endpoints.
 
 ## Features
 
@@ -8,6 +8,13 @@ A simple ReactPHP-style HTTP server implementation that serves specific endpoint
 - **GET /ping** - Returns "pong"
 - **404 handling** - Returns "Not Found" for unknown routes
 - **405 handling** - Returns "Method Not Allowed" for non-GET requests
+
+## Installation
+
+Install dependencies using Composer:
+```bash
+composer install
+```
 
 ## Usage
 
@@ -20,39 +27,39 @@ You can start the server in several ways:
 ./start.php
 ```
 
-#### Option 2: Using PHP's built-in server directly
+#### Option 2: Running the server directly
 ```bash
-php -S localhost:8080 server.php
+php server.php
 ```
 
-The server will start on `http://localhost:8080`
+The server will start on `http://127.0.0.1:8080`
 
 ### Testing the endpoints
 
 Test the root endpoint:
 ```bash
-curl http://localhost:8080/
+curl http://127.0.0.1:8080/
 # Returns: ^_^
 ```
 
 Test the ping endpoint:
 ```bash
-curl http://localhost:8080/ping
+curl http://127.0.0.1:8080/ping
 # Returns: pong
 ```
 
 ## Files
 
-- `server.php` - Main server logic handling routes
+- `server.php` - Main ReactPHP server implementation
 - `start.php` - Helper script to start the server
-- `composer.json` - PHP project configuration
+- `composer.json` - PHP project configuration with ReactPHP dependencies
 
 ## Implementation Notes
 
-This implementation uses PHP's built-in development server (`php -S`) to provide a simple HTTP server that handles the specified routes. While not using the actual ReactPHP library (due to installation limitations), it follows the same pattern and provides the exact functionality requested.
-
-The server properly handles:
+This implementation uses ReactPHP's HTTP server component to provide an asynchronous, event-driven HTTP server. The server properly handles:
 - HTTP response codes (200, 404, 405)
 - Content-Type headers
 - Request method validation
 - URL path parsing
+
+The server runs on ReactPHP's event loop and can handle multiple concurrent requests efficiently.
